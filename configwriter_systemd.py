@@ -3,13 +3,13 @@ import pwd
 import time
 import configparser 
 
-user =  pwd.getpwuid(os.getuid())[0]
+user =  os.listdir("/home/")[0]
 Generate_path = "/usr/lib/systemd/system/" 
 os.system("sudo chmod -R 777 "+Generate_path)
 project_name = 'Project:RoboreactorGenFlow'
 mode = 'multi-user.target' 
 Python_exc_path = "/usr/bin/python3 "
-Execute_path = "/home/"+'pi'+"/RoboreactorGenFlow/RoboreactorGenFlow.py"   #Change username over the platform 
+Execute_path = "/home/"+user+"/RoboreactorGenFlow/RoboreactorGenFlow.py"   #Change username over the platform 
 config = configparser.ConfigParser() 
 config.optionxform = str
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
