@@ -8,9 +8,6 @@ Generate_path = "/usr/lib/systemd/system/"
 os.system("sudo chmod -R 777 "+Generate_path)
 project_name = 'Project:RoboreactorGenFlow'
 mode = 'multi-user.target' 
-type = 'idle'
-wanted = 'WantedBy'
-execdat = 'ExecStart'
 Python_exc_path = "/usr/bin/python3 "
 Execute_path = "/home/"+'pi'+"/RoboreactorGenFlow/RoboreactorGenFlow.py"   #Change username over the platform 
 config = configparser.ConfigParser() 
