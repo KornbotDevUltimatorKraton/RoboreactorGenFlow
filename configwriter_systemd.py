@@ -12,7 +12,7 @@ type = 'idle'
 wanted = 'WantedBy'
 execdat = 'ExecStart'
 Python_exc_path = "/usr/bin/python3 "
-Execute_path = "/home/"+'pi'+"/RoboreactorGenFlow/RoboreactorGenFlow.py"
+Execute_path = "/home/"+'pi'+"/RoboreactorGenFlow/RoboreactorGenFlow.py"   #Change username over the platform 
 config = configparser.ConfigParser() 
 config.optionxform = str
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
