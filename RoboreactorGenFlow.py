@@ -1,14 +1,23 @@
 import jwt 
+import smbus
+from ast import literal_eval
 from flask import Flask,jsonify,request,render_template,redirect,url_for 
 import os 
 import getpass 
 import configparser
 import json 
 import time 
+import cv2
+import socket
 import threading
 import subprocess
 import requests # Getting the request from the json api of the update version on the microcontroller support version path 
-user = getpass.getuser() 
+import sounddevice as sd
+import serial.tools.list_ports
+from itertools import count
+bus = smbus.SMBus(1)
+#user = getpass.getuser() 
+user = os.listdir("/home/")[0]
 Home_path = '/home/'+str(user)+"/" #Home path to get the config file and project setting outside the node generator
 
 Path = '/home/'+str(user)+"/Roboreactor_projects" # getting the file path 
@@ -52,6 +61,98 @@ try:
      print(Data) # Getting the email to verfy the data to send back to request the project and send back data to the user profile information  
 except: 
      pass 
+class Machine_data_processing(object):
+           
+           def get_ip(self): 
+                   loc = requests.request('GET', 'https://api.ipify.org')
+                   ip = loc.text
+                   return ip # Getting the ip data return this will return the public ip of the client machine 
+           def get_serial_port(self):   # Getting the serial devices name 
+               
+               try:
+                    devices_data = subprocess.check_output(" python3 -m serial.tools.list_ports -s",shell=True)
+                    serial_port = devices_data.decode().split()
+                    if '/dev/stlinkv2-1_1' in serial_port:
+                           serial_port.remove('/dev/stlinkv2-1_1')
+                    ports = serial.tools.list_ports.comports()
+                    serial_devices_name = {}
+                    for port, desc ,hid in sorted(ports):
+                                 print("{}: {} [{}]".format(port, desc, hid))
+                                 serial_devices_name[port] = desc                     
+                    return serial_devices_name
+               except:
+                    print("No serial device found ")
+                    return "No serial device found"
+           def get_local_ip(self):
+                     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                     s.connect(("8.8.8.8",80))
+                     return s.getsockname()[0]  
+
+           def get_audio_device(self):
+                    devices = list(sd.query_devices())
+                    return devices 
+           def get_camera_device(self):
+                    index = 0
+                    arr = []
+                    i = 6
+                    for i in range(0,i):
+                        cap = cv2.VideoCapture(index)
+                        if cap.read()[0]:
+                            arr.append(index)
+                            cap.release()
+                        index += 1
+                        i -= 1
+                    return {"camera_array":arr}                          
+           def get_devicehost(self):
+                    return os.listdir("/home/")[0]
+           def Get_i2c_address(self):
+                    address_mem = []
+                    def bearing255(address):
+                          bear = bus.read_byte_data(address, 1)
+                          
+                    def bearing3599(address):
+                          bear1 = bus.read_byte_data(address, 2)
+                          bear2 = bus.read_byte_data(address, 3)
+                          bear = (bear1 << 8) + bear2
+                          bear = bear/10.0
+                          #return bear
+                    for i in range(0,128):
+                           try:
+                              address_data = literal_eval(hex(i)) 
+                              bearing3599(address_data)     #this returns the value to 1 decimal place in degrees. 
+                              bearing255(address_data)      #this returns the value as a byte between 0 and 255. 
+                              address_mem.append(hex(i))
+                              
+                           except: 
+                                  pass 
+                    return {'I2C':address_mem}
+
+ 
+@app.route("/device_info")
+def device_info():
+       getdevice_data = Machine_data_processing()
+       cam_device = getdevice_data.get_camera_device()
+       audio_device = getdevice_data.get_audio_device()
+       serial_devices = getdevice_data.get_serial_port()
+       host_name = getdevice_data.get_devicehost() 
+       ip = getdevice_data.get_ip() 
+       i2c_address =  getdevice_data.Get_i2c_address() 
+       localip = getdevice_data.get_local_ip()
+       Account_data = OAuth.get('Account')
+       
+       data_host = {'email':Account_data,"i2c_devices":i2c_address,"serial_devices":serial_devices,"Vision_system":cam_device,"Audio_system":audio_device,"Host_name":host_name,"IP":ip,'Local_ip':localip}
+       try:
+         res = requests.post('https://roboreactor.com/devices/report',json=data_host) #Report node client connection 
+         print(res.json())
+         print(Account_data)
+         return jsonify(data_host)
+       except:
+            print("Server communication error please check your internet connection")
+@app.route("/path_fetch")
+def fetch_path():
+       path_dat = "/home/"+user+"/Roboreactor_projects/"
+       json_data = {"Path_file":path_dat}
+       return jsonify(json_data)  
 
 class data_transfer_features():
          def send_component_selected_data(self,email,project_name,components_list):
