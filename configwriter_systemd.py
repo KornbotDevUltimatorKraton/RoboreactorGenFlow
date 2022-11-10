@@ -25,7 +25,7 @@ config.set(settings[0],'Description',str(project_name))
 config.set(settings[0],'After',str(mode))
 #Service 
 config.add_section(settings[1])
-config.set(settings[1],'Type',str(idle))
+config.set(settings[1],'Type','idle'))
 config.set(settings[1],'WorkingDirectory',Working_path)
 config.set(settings[1],'User',str(user))
 config.set(settings[1],'ExecStart',str(Python_exc_path+Execute_path))
