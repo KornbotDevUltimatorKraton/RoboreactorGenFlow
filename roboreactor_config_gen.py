@@ -6,9 +6,7 @@ import getpass
 import os.path
 from os import path 
 #+++++++++++++++++Warning ! the file should created in authorized directory inorder to create the config file +++++++++++++++++++++++++++# 
-#data_requested = {'Serial_com_connect_1': 'ttyACM0', 'Camera_raw_2': '127.0.0.1,5080,0', 'Sensor_array_5': '640,480,Non', 'Multiple_node_logic_7': [1, 2, 5, 7, 8, 10, 11, 12, 13], 'Multi_cache_server_11': '0,127.0.1.7,5080', 'face_recog_10': '127.0.1.7,0,5080,5081,Non', 'Speech_recognition_8': '127.0.0.1,5070,English','QR_code_scanner_pub_5': '127.0.1.7,0,5080,5071,Non','NLP_languageprocessing_13': '127.0.1.7,5081,5082,English','Translate_language_14':'127.0.0.1,5074,English,Thai','tts_12': 'English,100'}
-
-user = getpass.getuser() # Getting the user host 
+user = os.listdir("/home/")[0]
 Home_path = '/home/'+str(user)+"/" #Home path to get the config file and project setting outside the node generator
 # Reading the path of the project config
 
@@ -207,7 +205,7 @@ class config_from_keys(object):
                   config.set(str(path_num),"buffer",pub_buffer) 
                   configfile = open(project_config_path+"/"+str(path_num)+".cfg",'w')
                   config.write(configfile)
-                      
+                       
              except: 
                   print("Configfile was created!")                
 
@@ -1182,13 +1180,13 @@ class code_from_json_gen(object):
              number_device = path_num.split("_")[len(list(path_num.split("_")))-1]
              #mcu_number, number, speed, gpiol, gpior
              data = serial_port
-             if   data != "i2c":
+             if   data != "I2C":
                   
                   text_edit = "\ndef "+str(path_num)+'_function():\n\tCreate_Servo_motor('+str(mcu_selected)+','+str(number_device)+","+str(0)+")  #microcontroller ,servo number, angle"
                   print(text_edit)
                   project_writer.write(text_edit)
                   mem_thread_function.append(str(path_num)+"_function")  
-             if serial_port == "i2c":
+             if serial_port == "I2C":
                   print("I2c found")
 
                   text_edit = "\ndef "+str(path_num)+'_function():\n\tCreate_i2c_Servo('+str(number_device)+',"'+str(r)+'",'+str(0)+","+str(pins)+")  #number_servo ,servo_name, angle, pin"
@@ -1235,7 +1233,7 @@ class code_from_json_gen(object):
        def Sensor_Array(self,path_num):
              project_writer = open(path_project_config+"/"+path_project_config.split("/")[len(path_project_config.split("/"))-1]+".py",'a') # Createing the file with the preconfig library and control function  
              list_file = os.listdir(path_project_config+"/"+path_num) # Getting the file name inside the directory 
-             print("tts config file",list_file)
+             print("Sensor_array config file",list_file)
              config.read(path_project_config+"/"+path_num+"/"+list_file[0]) # getting the file inside to checking the directory config file 
              
              path_config = config[path_num]['path']  # Getting the path num to collect the data path in the list 
@@ -1254,7 +1252,18 @@ class code_from_json_gen(object):
              mem_thread_function.append(str(path_num)+"_function")
        #Logic part  
        def Multiple_node_logic(self,path_num):
-            pass 
+             project_writer = open(path_project_config+"/"+path_project_config.split("/")[len(path_project_config.split("/"))-1]+".py",'a') # Createing the file with the preconfig library and control function  
+             list_file = os.listdir(path_project_config+"/"+path_num) # Getting the file name inside the directory 
+             print("Multinode config file",list_file)
+             config.read(path_project_config+"/"+path_num+"/"+list_file[0]) # getting the file inside to checking the directory config file 
+             path_config = config[path_num]['path']  # Getting the path num to collect the data path in the list 
+             print("Code writer read config",path_config)
+             #Getting the node generate   
+             list_node = config[path_num]['list_node_number'] # Getting the list node number of the 
+             text_edit = "\ndef "+str(path_num)+"_function():\n\tlist_node = "+str(list_node)             
+             project_writer.write(text_edit)
+             mem_thread_function.append(str(path_num)+"_function")  
+             
 
 class Check_found_function(object):
          def Function_checker(self,input_function,path_num,sub_data): 
@@ -1263,9 +1272,14 @@ class Check_found_function(object):
                read_output_dat = {"publish_data":"pub_node","subscriber_data":"sub_node","Multi_cache_server":"Multi_cache_server","Camera_raw":"Camera_raw","face_recog":"face_rec","QR_code_scanner_pub":"QR_code_scanner_pub","Skeletal_detection":"Skeletal_detection","Body_detection":"Body_detection","tts":"Text_to_speech","Speech_recognition":"Speech_recognition","NLP_languageprocessing":"NLP_language_processing","Translate_language":"Translate_language","BLDC_motor":"Stepper_motor","DC_motor":"DC_motor","Servo_control":"Servo_motor","Serial_com_connect":"Serial_com","Lidar_publisher":"Lidar","GPS":"GPS","Sensor_array":"Sensor_Array","Multiple_node_logic":"Multiple_node_logic"}
                for r in range(0,len(list(read_current_json))):  # Adding the path num to the last parameter input from the loop 
                          #print('\nif input_function == "'+str(list(read_output_dat)[r])+'":'+"\n\t"+str(list(read_output_dat)[r])+" = config_from_keys()"+"\n\t"+str(list(read_output_dat)[r])+"."+str(read_output_dat.get(list(read_output_dat)[r]))+"('"+str(path_num)+"','"+str(sub_data)+"')")
+                      try:    
                          exec('\nif input_function == "'+str(list(read_current_json)[r])+'":'+"\n\t"+str(list(read_current_json)[r])+" = config_from_keys()"+"\n\t"+str(list(read_current_json)[r])+"."+str(read_current_json.get(list(read_current_json)[r]))+"('"+str(path_num)+"','"+str(sub_data)+"')")  
                          #print('\nif input_function == "'+str(list(read_output_dat)[r])+'":'+"\n\t"+str(list(read_output_dat)[r])+" = config_from_keys()"+"\n\t"+str(list(read_output_dat)[r])+"."+str(read_output_dat.get(list(read_output_dat)[r]))+"()")
-
+                      except:
+                          print("Error function not found")
+                          if input_function == "Multiple_node_logic":
+                                      Multiple_node_logic = config_from_keys()
+                                      Multiple_node_logic.Multiple_node_logic(path_num,json.dumps(sub_data))
 class Lib_generator_function(object):
 
      def intersection(self,lst1, lst2):
@@ -1355,11 +1369,16 @@ def Writing_serial_port_config():
                        path_config = config[r]['path']  # Getting the path num to collect the data path in the list 
                        serial_port = config[r]['serial_port']
                        baud_rate = config[r]['baud_rate']
-                       if str(serial_port) !="i2c": 
+                       if str(serial_port) !="I2C": 
                             serial_code = "\n"+str(r)+" = pyfirmata.ArduinoMega('/dev/"+serial_port+"')"
                             print(serial_code)
                             project_writer.write(serial_code)
-                         
+                       if str(serial_port) =='I2C':
+                            print("No code append in the list") 
+                            #Add the I2C code control for the PCM board 16 Channel PWM driver 
+                            #serial_code = "\n"+str(r)+" = pyfirmata.ArduinoMega('/dev/"+serial_port+"')"
+                            #print(serial_code)
+                            #project_writer.write(serial_code)     
 def Pins_mcu_config(): 
         project_writer = open(path_project_config+"/"+path_project_config.split("/")[len(path_project_config.split("/"))-1]+".py",'a') 
         list_file = os.listdir(path_project_config+"/")
@@ -1395,7 +1414,7 @@ def Pins_mcu_config():
                        print("Check serial",'"'+str(serial_port)+'"')
                        number_device = r.split("_")[len(r.split("_"))-1]
                        check_serial = serial_port
-                       if serial_port != "i2c": 
+                       if serial_port != "I2C": 
                            serial_code = '\nCreate_serial_Servo('+str(number_device)+','+str(r)+','+str(mcu_selected)+','+str(gpio_pin)+")"
                            print(serial_code)
                            project_writer.write(serial_code)            
